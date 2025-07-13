@@ -1,42 +1,84 @@
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Services
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 50)
-frame.Position = UDim2.new(0.5, -100, 0, 10)
-frame.BackgroundTransparency = 0.5
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.Parent = screenGui
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FPS_Ping_Display"
+ScreenGui.Parent = game:GetService("CoreGui")
 
-local textLabel = Instance.new("TextLabel")
-textLabel.Size = UDim2.new(1, 0, 1, 0)
-textLabel.Text = "FPS: 0"
-textLabel.TextColor3 = Color3.new(1, 1, 1)
-textLabel.BackgroundTransparency = 1
-textLabel.Font = Enum.Font.SourceSansBold
-textLabel.TextSize = 24
-textLabel.Parent = frame
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 80)
+Frame.Position = UDim2.new(0.7, 0, 0.05, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BackgroundTransparency = 0.3
+Frame.BorderSizePixel = 2
+Frame.Parent = ScreenGui
+Frame.Active = true
+Frame.Draggable = true -- Makes the GUI movable
 
-local lastTime = tick()
-local frameCount = 0
-local fps = 0
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0.3, 0)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "FPS & Ping counter"
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 16
+TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+TitleLabel.Parent = Frame
 
-local function updateColor()
-    local time = tick()
-    local r = math.sin(time * 1) * 0.5 + 0.5
-    local g = math.sin(time * 1.5) * 0.5 + 0.5
-    local b = math.sin(time * 2) * 0.5 + 0.5
-    textLabel.TextColor3 = Color3.new(r, g, b)
-end
+local FPSText = Instance.new("TextLabel")
+FPSText.Size = UDim2.new(1, 0, 0.35, 0)
+FPSText.Position = UDim2.new(0, 0, 0.3, 0)
+FPSText.BackgroundTransparency = 1
+FPSText.Font = Enum.Font.SourceSansBold
+FPSText.TextSize = 16
+FPSText.TextColor3 = Color3.new(1, 1, 1)
+FPSText.Parent = Frame
 
-game:GetService("RunService").RenderStepped:Connect(function()
-    frameCount = frameCount + 1
-    local currentTime = tick()
-    if currentTime - lastTime >= 1 then
-        fps = frameCount
-        frameCount = 0
-        lastTime = currentTime
-        textLabel.Text = "FPS: " .. fps
+local PingText = Instance.new("TextLabel")
+PingText.Size = UDim2.new(1, 0, 0.35, 0)
+PingText.Position = UDim2.new(0, 0, 0.65, 0)
+PingText.BackgroundTransparency = 1
+PingText.Font = Enum.Font.SourceSansBold
+PingText.TextSize = 16
+PingText.TextColor3 = Color3.new(1, 1, 1)
+PingText.Parent = Frame
+
+-- Send a welcoming notification to the player
+StarterGui:SetCore("SendNotification", {
+    Title = "Fps & Ping Counter",
+    Text = "by nikos_YT7",
+    Icon = "rbxassetid://128509150386783", -- New icon ID
+    Duration = 5
+})
+
+-- Update FPS & Ping every second
+task.spawn(function()
+    while true do
+        -- FPS Calculation
+        local fps = math.floor(1 / RunService.RenderStepped:Wait())
+
+        -- Ping Calculation
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+
+        -- FPS Rating
+        local fpsRating = (fps > 60 and "Excellent (Ultra Smooth)") or 
+                          (fps >= 30 and "Playable") or 
+                          "Choppy (Bad)"
+
+        -- Ping Rating
+        local pingRating = (ping <= 50 and "Good") or 
+                           (ping <= 100 and "Decent") or 
+                           "Bad (High Ping)"
+
+        -- Update GUI Text
+        FPSText.Text = "FPS: " .. fps .. " (" .. fpsRating .. ")"
+        PingText.Text = "Ping: " .. ping .. "ms (" .. pingRating .. ")"
+
+        task.wait(1) -- Update every second
     end
-    updateColor()
 end)
